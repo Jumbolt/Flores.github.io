@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Flores para Coti 🌸</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #fff0f5;
+      overflow: hidden;
+    }
+    #ui {
+      position: absolute;
+      text-align: center;
+      width: 100%;
+      top: 30%;
+      z-index: 10;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #ff69b4;
+      color: white;
+    }
+    /* Modal */
+    #teAmoBox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 182, 193, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    #teAmoContent {
+      background: #fff;
+      padding: 30px 50px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      animation: aparecer 0.8s ease;
+    }
+    #teAmoContent h2 {
+      color: #e60073;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    #teAmoContent img {
+      width: 120px;
+      margin-bottom: 20px;
+    }
+    #agarrarBtn {
+      background-color: #ff3399;
+      color: #fff;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1rem;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    #agarrarBtn:hover {
+      background-color: #e60073;
+    }
+    @keyframes aparecer {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- UI inicial -->
+  <div id="ui">
+    <h2>Jere quiere darte flores 🌸</h2>
+    <button id="aceptar">Aceptar</button>
+    <button id="rechazar">Rechazar</button>
+  </div>
+
+  <!-- Modal Te Amo -->
+  <div id="teAmoBox">
+    <div id="teAmoContent">
+      <h2>💖 Te amo 💖</h2>
+      <img src="tulipan.png" alt="Regalo">
+      <br>
+      <button id="agarrarBtn">Agarrar Tulipán 🌷</button>
+    </div>
+  </div>
+
+  <script>
+    let aceptado = false;
+    let regaloAbierto = false;
+    let mostrarTulipanFlag = false;
+    let florSeleccionada = null;
+    let flowers = [];
+    let regaloImg;
+    let regalo;
+
+    function preload() {
+      // imagen del regalo (tenés que poner "regalo.png" en la misma carpeta)
+      regaloImg = loadImage("regalo.png");
+    }
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+
+      let rechazarBtn = select('#rechazar');
+      let aceptarBtn = select('#aceptar');
+
+      rechazarBtn.mousePressed(moveRechazar);
+      aceptarBtn.mousePressed(aceptar);
+
+      // Muchas flores
+      for (let i = 0; i < 200; i++) {
+        flowers.push(new Flor(random(width), random(height)));
+      }
+
+      // Regalo escondido
+      regalo = new Regalo(random(width * 0.2, width * 0.8), random(height * 0.2, height * 0.8));
+
+      // Botón para agarrar el tulipán
+      document.getElementById("agarrarBtn").addEventListener("click", () => {
+        mostrarTulipanFlag = false;
+        document.getElementById("teAmoBox").style.display = "none";
+      });
+    }
+
+    function draw() {
+      background(255, 240, 245);
+
+      if (aceptado) {
+        for (let f of flowers) {
+          f.mover();
+          f.dibujar();
+        }
+
+        if (!regaloAbierto) {
+          regalo.dibujar();
+        }
+      }
+    }
+
+    function moveRechazar() {
+      let x = random(width - 100);
+      let y = random(height - 50);
+      select('#rechazar').position(x, y);
+    }
+
+    function aceptar() {
+      aceptado = true;
+      select('#ui').html('<h1>Feliz día de la primavera Coti 🌸</h1>');
+    }
+
+    // Clase Flor
+    class Flor {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = random(20, 50);
+        this.speedX = random(-0.5, 0.5);
+        this.speedY = random(0.5, 1);
+        this.color = color(random(200,255), random(80,200), random(150,255));
+      }
+
+      mover() {
+        if (florSeleccionada !== this) {
+          this.x += this.speedX;
+          this.y += this.speedY;
+        }
+        if (this.y > height + this.size) {
+          this.y = -this.size;
+          this.x = random(width);
+        }
+      }
+
+      dibujar() {
+        push();
+        translate(this.x, this.y);
+        noStroke();
+        fill(this.color);
+        for (let i = 0; i < 6; i++) {
+          ellipse(0, -this.size/2, this.size/2, this.size);
+          rotate(PI/3);
+        }
+        fill(255, 220, 0);
+        ellipse(0, 0, this.size/2);
+        pop();
+      }
+
+      dentro(x, y) {
+        return dist(x, y, this.x, this.y) < this.size;
+      }
+    }
+
+    // Clase Regalo
+    class Regalo {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 70;
+      }
+      dibujar() {
+        imageMode(CENTER);
+        image(regaloImg, this.x, this.y, this.size, this.size);
+      }
+      clickeado(mx, my) {
+        return mx > this.x - this.size/2 && mx < this.x + this.size/2 &&
+               my > this.y - this.size/2 && my < this.y + this.size/2;
+      }
+    }
+
+    // Eventos mouse
+    function mousePressed() {
+      if (aceptado && !regaloAbierto && regalo.clickeado(mouseX, mouseY)) {
+        regaloAbierto = true;
+        mostrarTulipanFlag = true;
+        document.getElementById("teAmoBox").style.display = "flex";
+      }
+
+      for (let f of flowers) {
+        if (f.dentro(mouseX, mouseY)) {
+          florSeleccionada = f;
+          break;
+        }
+      }
+    }
+
+    function mouseDragged() {
+      if (florSeleccionada) {
+        florSeleccionada.x = mouseX;
+        florSeleccionada.y = mouseY;
+      }
+    }
+
+    function mouseReleased() {
+      florSeleccionada = null;
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+  </script>
+</body>
+</html>
